@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cigarette Stock & Sales Manager</title>
+    
+    <!-- Google Fonts: Hind Siliguri for Bengali, Inter for numbers -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #5f6368;
+            --success-color: #1e8e3e;
+            --danger-color: #d93025;
+            --bg-light: #f1f3f4;
+            --font-bn: 'Hind Siliguri', sans-serif;
+            --font-en: 'Inter', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-bn);
+            background-color: var(--bg-light);
+            color: #202124;
+            padding-bottom: 70px; /* Space for bottom nav */
+            font-size: 0.9rem;
+            overflow-x: hidden;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE and Edge */
+        }
+
+        body::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
+        }
+
+        /* Hide scrollbars for all elements */
+        * {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        *::-webkit-scrollbar {
+            display: none;
+        }
+
+        .number-font {
+            font-family: var(--font-en);
+        }
+
+        /* App Header */
+        .app-header {
+            background-color: white;
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 1000;
+            border-top: 1px solid #f1f3f4;
+        }
+
+        .nav-item-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            font-size: 0.7rem;
+            font-weight: 500;
+            gap: 4px;
+            flex: 1;
+            transition: all 0.2s;
+            padding: 4px 0;
+        }
+
+        .nav-item-btn i, .nav-item-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .nav-item-btn.active {
+            color: var(--primary-color);
+        }
+
+        .nav-item-btn.active svg {
+            stroke: var(--primary-color);
+        }
+
+        /* View Containers */
+        .view-container {
+            display: none;
+            padding: 16px 12px;
+            animation: slideIn 0.2s ease-out;
+        }
+
+        .view-container.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Dashboard Cards */
+        .summary-card {
+            border-radius: 12px;
+            padding: 16px;
+            color: white;
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+
+        .bg-blue { background: linear-gradient(135deg, #4285f4, #1a73e8); }
+        .bg-green { background: linear-gradient(135deg, #34a853, #1e8e3e); }
+        .bg-orange { background: linear-gradient(135deg, #fbbc05, #f9ab00); }
+
+        .summary-label { font-size: 0.8rem; opacity: 0.9; margin-bottom: 4px; }
+        .summary-value { font-size: 1.4rem; font-weight: 700; }
+
+        .quick-action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #f1f3f4;
+            color: #3c4043;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .action-btn i, .action-btn svg {
+            color: var(--primary-color);
+            width: 24px;
+            height: 24px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .recent-item {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+
+        .recent-info h6 { margin: 0; font-size: 0.9rem; font-weight: 600; }
+        .recent-info small { color: var(--secondary-color); font-size: 0.75rem; }
+        .recent-amount { font-weight: 700; color: var(--success-color); }
+
+        /* Compact UI Overrides */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 12px;
+        }
+
+        .card-header {
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            background: transparent;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .form-control, .form-select {
+            height: 40px;
+            border-radius: 8px;
+            border: 1px solid #dadce0;
+        }
+
+        .btn-primary {
+            height: 40px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        /* Mobile Specific */
+        @media (max-width: 576px) {
+            .container { padding: 0 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- App Header -->
+    <header class="app-header">
+        <h1 class="app-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package-2"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/><path d="M12 3v6"/></svg>
+            সিগারেট ম্যানেজার
+        </h1>
+        <div class="user-profile" onclick="switchView('settings')">
+            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; cursor: pointer;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+        </div>
+    </header>
+
+    <div class="sync-indicator px-3 py-1 bg-white border-bottom text-center" style="height: 24px;">
+        <span id="sync-status" class="small text-muted"></span>
+    </div>
+
+    <div class="container">
+        <!-- VIEW: DASHBOARD -->
+        <div id="view-dashboard" class="view-container active">
+            <!-- Summary Cards -->
+            <div class="summary-card bg-blue">
+                <div class="summary-label">মোট স্টক ভ্যালু</div>
+                <div class="summary-value number-font" id="dash-total-stock">৳0</div>
+            </div>
+            <div class="row g-2">
+                <div class="col-6">
+                    <div class="summary-card bg-green">
+                        <div class="summary-label">আজকের বিক্রি</div>
+                        <div class="summary-value number-font" id="dash-today-sales">৳0</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="summary-card bg-orange">
+                        <div class="summary-label">মাসিক লাভ</div>
+                        <div class="summary-value number-font" id="dash-month-profit">৳0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <h2 class="section-title">কুইক অ্যাকশন</h2>
+            <div class="quick-action-grid">
+                <a href="#" class="action-btn" onclick="switchView('stock')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-circle"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                    স্টক যোগ
+                </a>
+                <a href="#" class="action-btn" onclick="switchView('sell')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-cart"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                    বিক্রি করুন
+                </a>
+                <a href="#" class="action-btn" onclick="switchView('report')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    রিপোর্ট
+                </a>
+                <a href="#" class="action-btn" onclick="switchView('profit')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trending-up"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    লাভ/ক্ষতি
+                </a>
+            </div>
+
+            <!-- Recent Sales -->
+            <div class="section-title">
+                <span>সাম্প্রতিক বিক্রি</span>
+                <a href="#" class="text-primary text-decoration-none" style="font-size: 0.8rem;" onclick="switchView('report')">সব দেখুন</a>
+            </div>
+            <div id="recent-sales-list">
+                <!-- Recent sales items will be injected here -->
+            </div>
+        </div>
+
+        <!-- VIEW: STOCK ENTRY -->
+        <div id="view-stock" class="view-container">
+            <div class="card">
+                <div class="card-header">স্টক ম্যানেজমেন্ট</div>
+                <div class="card-body">
+                    <form id="stock-form">
+                        <input type="hidden" id="stock-id">
+                        <div class="mb-3">
+                            <label class="form-label">ব্র্যান্ডের নাম</label>
+                            <input type="text" class="form-control" id="stock-brand" list="brand-list" required placeholder="যেমন: Benson & Hedges">
+                            <datalist id="brand-list"></datalist>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6 mb-2">
+                                <label class="form-label">প্যাকেট ক্রয় মূল্য</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">৳</span>
+                                    <input type="number" step="0.01" class="form-control number-font" id="stock-packet-price" required>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="form-label">প্যাকেটে পিস</label>
+                                <input type="number" class="form-control form-control-sm number-font" id="stock-pcs-per-packet" value="20" required>
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6 mb-2">
+                                <label class="form-label">প্যাকেট পরিমাণ</label>
+                                <input type="number" class="form-control form-control-sm number-font" id="stock-packet-qty" required>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="form-label">বিক্রয় মূল্য (পিস)</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">৳</span>
+                                    <input type="number" step="0.01" class="form-control number-font" id="stock-sell-price-pcs" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ক্রয়ের তারিখ</label>
+                            <input type="date" class="form-control form-control-sm number-font" id="stock-date" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="stock-submit-btn">স্টক যোগ করুন</button>
+                        <button type="button" class="btn btn-secondary w-100 mt-2 d-none" id="stock-cancel-btn">বাতিল করুন</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>স্টক লিস্ট</span>
+                    <span class="badge bg-primary number-font" id="total-investment-badge">৳০</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="stock-table">
+                            <thead>
+                                <tr>
+                                    <th>ব্র্যান্ড</th>
+                                    <th>পিস</th>
+                                    <th>বিক্রয়/পিস</th>
+                                    <th>অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: SELL ENTRY -->
+        <div id="view-sell" class="view-container">
+            <div class="card">
+                <div class="card-header">নতুন বিক্রি এন্ট্রি</div>
+                <div class="card-body">
+                    <form id="sell-form">
+                        <div class="mb-2">
+                            <label class="form-label">তারিখ</label>
+                            <input type="date" class="form-control form-control-sm number-font" id="sell-date" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">ব্র্যান্ড</label>
+                            <select class="form-select form-select-sm" id="sell-brand" required>
+                                <option value="">ব্র্যান্ড সিলেক্ট করুন</option>
+                            </select>
+                            <div id="stock-availability" class="form-text mt-1 d-none" style="font-size: 0.75rem;">
+                                স্টকে আছে: <span class="fw-bold text-primary number-font" id="available-qty">0</span> পিস
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6 mb-2">
+                                <label class="form-label">পরিমাণ (পিস)</label>
+                                <input type="number" class="form-control form-control-sm number-font" id="sell-qty" required>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="form-label">বিক্রয় মূল্য/পিস</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">৳</span>
+                                    <input type="number" step="0.01" class="form-control number-font" id="sell-price" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">মোট টাকা</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">৳</span>
+                                <input type="text" class="form-control number-font bg-light" id="sell-total" readonly value="0">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fs-6">বিক্রি সম্পন্ন করুন</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: REPORT -->
+        <div id="view-report" class="view-container">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">শুরু</label>
+                            <input type="date" class="form-control number-font" id="filter-start-date">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">শেষ</label>
+                            <input type="date" class="form-control number-font" id="filter-end-date">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">মাস</label>
+                            <select class="form-select" id="filter-month">
+                                <option value="">সব মাস</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">ব্র্যান্ড</label>
+                            <select class="form-select" id="filter-brand">
+                                <option value="">সব ব্র্যান্ড</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-2 d-flex gap-2">
+                        <button class="btn btn-primary btn-sm flex-fill" id="apply-filters">ফিল্টার</button>
+                        <button class="btn btn-outline-secondary btn-sm flex-fill" id="reset-filters">রিসেট</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>বিক্রি রিপোর্ট</span>
+                    <button class="btn btn-success btn-sm" id="export-csv">CSV</button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="sales-table">
+                            <thead>
+                                <tr>
+                                    <th>তারিখ</th>
+                                    <th>ব্র্যান্ড</th>
+                                    <th>পিস</th>
+                                    <th>মোট</th>
+                                    <th>অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: PROFIT -->
+        <div id="view-profit" class="view-container">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <canvas id="profitChart" height="150"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>লাভ/ক্ষতি</span>
+                    <select class="form-select form-select-sm" id="profit-filter-month" style="width: 120px;">
+                        <option value="">সব মাস</option>
+                    </select>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="profit-table">
+                            <thead>
+                                <tr>
+                                    <th>ব্র্যান্ড</th>
+                                    <th>বিক্রি</th>
+                                    <th>লাভ/ক্ষতি</th>
+                                </tr>
+                            </thead>
+                            <tbody id="profit-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: SETTINGS -->
+        <div id="view-settings" class="view-container">
+            <div class="card">
+                <div class="card-header">ক্লাউড সিঙ্ক সেটিংস (Google Sheets)</div>
+                <div class="card-body">
+                    <p class="small text-muted mb-3">আপনার গুগল শিট অ্যাপ স্ক্রিপ্ট URL এখানে দিন যাতে ডাটা অনলাইনে সেভ থাকে।</p>
+                    <div class="mb-3">
+                        <label class="form-label">Web App URL</label>
+                        <input type="url" class="form-control" id="cloud-url-input" placeholder="https://script.google.com/macros/s/.../exec">
+                    </div>
+                    <button class="btn btn-primary w-100 mb-2" onclick="saveCloudSettings()">সেটিংস সেভ করুন</button>
+                    <button class="btn btn-outline-success w-100" onclick="fetchFromCloud()">শিট থেকে ডাটা লোড করুন</button>
+                    
+                    <div class="mt-4 p-3 bg-light rounded border">
+                        <h6 class="fw-bold small">কিভাবে সেটআপ করবেন?</h6>
+                        <ol class="small mb-0 ps-3">
+                            <li>গুগল শিট খুলুন।</li>
+                            <li>Extensions > Apps Script-এ যান।</li>
+                            <li>প্রদত্ত কোডটি পেস্ট করে Deploy করুন।</li>
+                            <li>Web App URL কপি করে এখানে বসান।</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item-btn active" onclick="switchView('dashboard')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-home"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            ড্যাশবোর্ড
+        </button>
+        <button class="nav-item-btn" onclick="switchView('stock')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            স্টক
+        </button>
+        <button class="nav-item-btn" onclick="switchView('sell')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-bag"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            বিক্রি
+        </button>
+        <button class="nav-item-btn" onclick="switchView('report')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart-3"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+            রিপোর্ট
+        </button>
+        <button class="nav-item-btn" onclick="switchView('profit')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pie-chart"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+            লাভ/ক্ষতি
+        </button>
+    </nav>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // --- DATA STORAGE & STATE ---
+        const State = {
+            stock: JSON.parse(localStorage.getItem('cig_stock')) || [],
+            sales: JSON.parse(localStorage.getItem('cig_sales')) || [],
+            cloudUrl: localStorage.getItem('cig_cloud_url') || 'https://script.google.com/macros/s/AKfycbxlkB4I3Y6_Qg9WWk0XKa4a-NsXqzmJkOMH_9Gh5gMda9g-nzRMJ7CeD5XqXmBhN0GP/exec',
+            isSyncing: false,
+            editingStockId: null,
+            filters: {
+                startDate: '',
+                endDate: '',
+                month: '',
+                brand: ''
+            }
+        };
+
+        const saveToStorage = () => {
+            localStorage.setItem('cig_stock', JSON.stringify(State.stock));
+            localStorage.setItem('cig_sales', JSON.stringify(State.sales));
+            localStorage.setItem('cig_cloud_url', State.cloudUrl);
+            
+            // Automatic Cloud Sync
+            if (State.cloudUrl) {
+                syncToCloud();
+            }
+        };
+
+        const syncToCloud = async () => {
+            if (!State.cloudUrl || State.isSyncing) return;
+            
+            State.isSyncing = true;
+            updateSyncStatus('সিঙ্ক হচ্ছে...');
+            
+            try {
+                const response = await fetch(State.cloudUrl, {
+                    method: 'POST',
+                    mode: 'no-cors', // Apps Script requires no-cors for simple POST
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        stock: State.stock,
+                        sales: State.sales
+                    })
+                });
+                updateSyncStatus('ক্লাউডে সেভ হয়েছে', 'text-success');
+            } catch (error) {
+                console.error('Cloud sync failed:', error);
+                updateSyncStatus('সিঙ্ক ব্যর্থ হয়েছে', 'text-danger');
+            } finally {
+                State.isSyncing = false;
+                setTimeout(() => updateSyncStatus(''), 3000);
+            }
+        };
+
+        const fetchFromCloud = async () => {
+            if (!State.cloudUrl) return;
+            
+            updateSyncStatus('ডাটা লোড হচ্ছে...');
+            try {
+                const response = await fetch(State.cloudUrl);
+                const data = await response.json();
+                
+                if (data && (data.stock || data.sales)) {
+                    State.stock = data.stock || [];
+                    State.sales = data.sales || [];
+                    
+                    // Save locally after fetching
+                    localStorage.setItem('cig_stock', JSON.stringify(State.stock));
+                    localStorage.setItem('cig_sales', JSON.stringify(State.sales));
+                    
+                    // Refresh UI
+                    window.updateDashboard();
+                    window.renderStockTable();
+                    window.renderSalesTable();
+                    window.renderProfitTable();
+                    
+                    updateSyncStatus('ডাটা আপডেট হয়েছে', 'text-success');
+                }
+            } catch (error) {
+                console.error('Fetch from cloud failed:', error);
+                updateSyncStatus('লোড ব্যর্থ হয়েছে', 'text-danger');
+            } finally {
+                setTimeout(() => updateSyncStatus(''), 3000);
+            }
+        };
+
+        const updateSyncStatus = (text, className = '') => {
+            const el = document.getElementById('sync-status');
+            if (el) {
+                el.textContent = text;
+                el.className = 'small ' + className;
+            }
+        };
+
+        // --- UTILITIES ---
+        const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
+        
+        const formatCurrency = (amount) => {
+            return '৳' + Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        const formatDate = (dateStr) => {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('bn-BD');
+        };
+
+        const getMonthName = (dateStr) => {
+            const date = new Date(dateStr);
+            return date.toLocaleString('bn-BD', { month: 'long', year: 'numeric' });
+        };
+
+        const getMonthKey = (dateStr) => {
+            const date = new Date(dateStr);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        };
+
+        // --- BUSINESS LOGIC ---
+        const getBrandStockSummary = () => {
+            const summary = {};
+            State.stock.forEach(item => {
+                if (!summary[item.brand]) {
+                    summary[item.brand] = {
+                        brand: item.brand,
+                        totalQty: 0,
+                        totalInvestment: 0,
+                        avgPurchasePrice: 0,
+                        entries: []
+                    };
+                }
+                summary[item.brand].totalQty += Number(item.quantity);
+                summary[item.brand].totalInvestment += (Number(item.quantity) * Number(item.purchasePrice));
+                summary[item.brand].entries.push(item);
+            });
+
+            Object.values(summary).forEach(s => {
+                s.avgPurchasePrice = s.totalQty > 0 ? s.totalInvestment / s.totalQty : 0;
+            });
+
+            return summary;
+        };
+
+        const getProfitLossData = (monthFilter = '') => {
+            const stockSummary = getBrandStockSummary();
+            const salesByBrand = {};
+
+            const filteredSales = monthFilter 
+                ? State.sales.filter(s => getMonthKey(s.date) === monthFilter)
+                : State.sales;
+
+            filteredSales.forEach(sale => {
+                if (!salesByBrand[sale.brand]) {
+                    salesByBrand[sale.brand] = {
+                        totalSold: 0,
+                        totalRevenue: 0,
+                        avgSellPrice: 0
+                    };
+                }
+                salesByBrand[sale.brand].totalSold += Number(sale.pieces);
+                salesByBrand[sale.brand].totalRevenue += Number(sale.totalAmount);
+            });
+
+            const brands = Array.from(new Set([...Object.keys(stockSummary), ...Object.keys(salesByBrand)]));
+            
+            return brands.map(brand => {
+                const stock = stockSummary[brand] || { totalQty: 0, avgPurchasePrice: 0, totalInvestment: 0 };
+                const sale = salesByBrand[brand] || { totalSold: 0, totalRevenue: 0 };
+                
+                // Cost of Goods Sold (COGS) based on average purchase price
+                const cogs = sale.totalSold * stock.avgPurchasePrice;
+                const profit = sale.totalRevenue - cogs;
+
+                return {
+                    brand,
+                    totalBought: stock.totalQty,
+                    avgPurchasePrice: stock.avgPurchasePrice,
+                    totalCost: stock.totalInvestment,
+                    totalSold: sale.totalSold,
+                    avgSellPrice: sale.totalSold > 0 ? sale.totalRevenue / sale.totalSold : 0,
+                    totalRevenue: sale.totalRevenue,
+                    profit: profit,
+                    status: profit >= 0 ? 'Profit' : 'Loss'
+                };
+            });
+        };
+
+        // --- UI RENDERING ---
+        window.switchView = (viewName) => {
+            const viewId = viewName.startsWith('view-') ? viewName : `view-${viewName}`;
+            
+            // Hide all views
+            document.querySelectorAll('.view-container').forEach(view => {
+                view.classList.remove('active');
+            });
+            
+            // Show target view
+            const targetView = document.getElementById(viewId);
+            if (targetView) {
+                targetView.classList.add('active');
+            } else {
+                console.error(`View not found: ${viewId}`);
+            }
+            
+            // Update nav icons
+            document.querySelectorAll('.nav-item-btn').forEach(item => {
+                item.classList.remove('active');
+                // Check if the onclick attribute contains the viewName
+                const onclickAttr = item.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes(`'${viewName}'`)) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+
+            // Refresh data for specific views
+            try {
+                if (viewName === 'dashboard') window.updateDashboard();
+                if (viewName === 'stock' || viewName === 'sell') window.renderStockTable();
+                if (viewName === 'report') window.renderSalesTable();
+                if (viewName === 'profit') window.renderProfitTable();
+                if (viewName === 'settings') {
+                    document.getElementById('cloud-url-input').value = State.cloudUrl;
+                }
+            } catch (err) {
+                console.error('Error refreshing view data:', err);
+            }
+        };
+
+        window.saveCloudSettings = () => {
+            const url = document.getElementById('cloud-url-input').value.trim();
+            State.cloudUrl = url;
+            saveToStorage();
+            Swal.fire('সফল!', 'ক্লাউড সেটিংস সেভ করা হয়েছে।', 'success');
+            switchView('dashboard');
+        };
+
+        window.updateDashboard = () => {
+            const stockSummary = getBrandStockSummary();
+            const totalStockValue = Object.values(stockSummary).reduce((sum, s) => sum + s.totalInvestment, 0);
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todaySales = State.sales
+                .filter(s => s.date === today)
+                .reduce((sum, s) => sum + Number(s.totalAmount), 0);
+
+            const currentMonth = getMonthKey(new Date());
+            const profitData = getProfitLossData(currentMonth);
+            const monthProfit = profitData.reduce((sum, p) => sum + p.profit, 0);
+
+            // Update Summary Cards
+            const totalStockEl = document.getElementById('dash-total-stock');
+            const todaySalesEl = document.getElementById('dash-today-sales');
+            const monthProfitEl = document.getElementById('dash-month-profit');
+
+            if (totalStockEl) totalStockEl.textContent = formatCurrency(totalStockValue);
+            if (todaySalesEl) todaySalesEl.textContent = formatCurrency(todaySales);
+            
+            if (monthProfitEl) {
+                monthProfitEl.textContent = formatCurrency(monthProfit);
+                monthProfitEl.className = 'summary-value number-font ' + (monthProfit >= 0 ? 'profit-text' : 'loss-text');
+            }
+
+            // Update Recent Sales
+            const recentSalesList = document.getElementById('recent-sales-list');
+            if (recentSalesList) {
+                recentSalesList.innerHTML = '';
+                
+                const recentSales = [...State.sales]
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .slice(0, 5);
+
+                if (recentSales.length === 0) {
+                    recentSalesList.innerHTML = '<div class="text-center text-muted py-3">কোন বিক্রির তথ্য নেই</div>';
+                } else {
+                    recentSales.forEach(sale => {
+                        const div = document.createElement('div');
+                        div.className = 'recent-item';
+                        div.innerHTML = `
+                            <div class="recent-info">
+                                <h6>${sale.brand}</h6>
+                                <small>${formatDate(sale.date)} • ${sale.pieces} পিস</small>
+                            </div>
+                            <div class="recent-amount number-font">${formatCurrency(sale.totalAmount)}</div>
+                        `;
+                        recentSalesList.appendChild(div);
+                    });
+                }
+            }
+        };
+
+        window.renderStockTable = () => {
+            const tbody = document.getElementById('stock-list-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (State.stock.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">কোন স্টক তথ্য নেই</td></tr>';
+                const badge = document.getElementById('total-investment-badge');
+                if (badge) badge.textContent = '৳০';
+                return;
+            }
+
+            let totalInvestment = 0;
+            State.stock.forEach(item => {
+                const total = item.quantity * item.purchasePrice;
+                totalInvestment += total;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="fw-bold">${item.brand}</div>
+                        <small class="text-muted number-font">${formatDate(item.date)}</small>
+                    </td>
+                    <td class="number-font">${item.quantity}</td>
+                    <td class="number-font">${formatCurrency(item.sellPricePcs || 0)}</td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editStock('${item.id}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteStock('${item.id}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const badge = document.getElementById('total-investment-badge');
+            if (badge) badge.textContent = formatCurrency(totalInvestment);
+            
+            // Update brand datalist
+            const brandList = document.getElementById('brand-list');
+            if (brandList) {
+                const brands = Array.from(new Set(State.stock.map(s => s.brand)));
+                brandList.innerHTML = brands.map(b => `<option value="${b}">`).join('');
+            }
+
+            // Update sell dropdown
+            const sellBrandSelect = document.getElementById('sell-brand');
+            if (sellBrandSelect) {
+                const brands = Array.from(new Set(State.stock.map(s => s.brand)));
+                const currentVal = sellBrandSelect.value;
+                sellBrandSelect.innerHTML = '<option value="">ব্র্যান্ড সিলেক্ট করুন</option>' + 
+                    brands.map(b => `<option value="${b}" ${b === currentVal ? 'selected' : ''}>${b}</option>`).join('');
+            }
+            
+            // Update filter dropdown
+            const filterBrandSelect = document.getElementById('filter-brand');
+            if (filterBrandSelect) {
+                const brands = Array.from(new Set(State.stock.map(s => s.brand)));
+                filterBrandSelect.innerHTML = '<option value="">সব ব্র্যান্ড</option>' + 
+                    brands.map(b => `<option value="${b}">${b}</option>`).join('');
+            }
+        };
+
+        window.renderSalesTable = () => {
+            const tbody = document.getElementById('sales-list-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            let filtered = State.sales;
+            if (State.filters.startDate) filtered = filtered.filter(s => s.date >= State.filters.startDate);
+            if (State.filters.endDate) filtered = filtered.filter(s => s.date <= State.filters.endDate);
+            if (State.filters.month) filtered = filtered.filter(s => getMonthKey(s.date) === State.filters.month);
+            if (State.filters.brand) filtered = filtered.filter(s => s.brand === State.filters.brand);
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">কোন বিক্রির তথ্য নেই</td></tr>';
+                return;
+            }
+
+            filtered.forEach(sale => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="number-font small">${formatDate(sale.date)}</td>
+                    <td><div class="fw-bold small">${sale.brand}</div></td>
+                    <td class="number-font">${sale.pieces}</td>
+                    <td class="number-font">${formatCurrency(sale.totalAmount)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteSale('${sale.id}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // Update month filter dropdown
+            const monthSelect = document.getElementById('filter-month');
+            const profitMonthSelect = document.getElementById('profit-filter-month');
+            const months = Array.from(new Set(State.sales.map(s => getMonthKey(s.date)))).sort().reverse();
+            
+            const monthOptions = '<option value="">সব মাস</option>' + 
+                months.map(m => `<option value="${m}">${getMonthName(m + '-01')}</option>`).join('');
+            
+            if (monthSelect && monthSelect.innerHTML !== monthOptions) {
+                monthSelect.innerHTML = monthOptions;
+            }
+            if (profitMonthSelect && profitMonthSelect.innerHTML !== monthOptions) {
+                profitMonthSelect.innerHTML = monthOptions;
+            }
+        };
+
+        window.renderProfitTable = () => {
+            const profitMonthSelect = document.getElementById('profit-filter-month');
+            const monthFilter = profitMonthSelect ? profitMonthSelect.value : '';
+            const data = getProfitLossData(monthFilter);
+            const tbody = document.getElementById('profit-list-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            data.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><div class="fw-bold">${p.brand}</div></td>
+                    <td class="number-font">${p.totalSold}</td>
+                    <td class="number-font ${p.profit >= 0 ? 'profit-text' : 'loss-text'}">
+                        ${formatCurrency(p.profit)}
+                        <br><span class="badge ${p.profit >= 0 ? 'bg-success' : 'bg-danger'}" style="font-size: 0.6rem;">${p.profit >= 0 ? 'লাভ' : 'ক্ষতি'}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updateProfitChart(data);
+        };
+
+        let profitChart = null;
+        const updateProfitChart = (data) => {
+            const ctx = document.getElementById('profitChart').getContext('2d');
+            
+            if (profitChart) profitChart.destroy();
+
+            profitChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.brand),
+                    datasets: [{
+                        label: 'লাভ/ক্ষতি (৳)',
+                        data: data.map(d => d.profit),
+                        backgroundColor: data.map(d => d.profit >= 0 ? 'rgba(30, 142, 62, 0.6)' : 'rgba(217, 48, 37, 0.6)'),
+                        borderColor: data.map(d => d.profit >= 0 ? 'rgb(30, 142, 62)' : 'rgb(217, 48, 37)'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        };
+
+        // --- EVENT HANDLERS ---
+        
+        // Stock Form
+        document.getElementById('stock-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('stock-id').value;
+            const brand = document.getElementById('stock-brand').value.trim();
+            const packetPrice = parseFloat(document.getElementById('stock-packet-price').value);
+            const pcsPerPacket = parseInt(document.getElementById('stock-pcs-per-packet').value);
+            const packetQty = parseInt(document.getElementById('stock-packet-qty').value);
+            const sellPricePcs = parseFloat(document.getElementById('stock-sell-price-pcs').value);
+            const date = document.getElementById('stock-date').value;
+
+            const purchasePricePerPcs = packetPrice / pcsPerPacket;
+            const totalPcs = packetQty * pcsPerPacket;
+
+            const stockData = { 
+                id: id || generateId(), 
+                brand, 
+                packetPrice, 
+                pcsPerPacket, 
+                packetQty, 
+                purchasePrice: purchasePricePerPcs, 
+                quantity: totalPcs, 
+                sellPricePcs,
+                date 
+            };
+
+            if (State.editingStockId) {
+                const index = State.stock.findIndex(s => s.id === State.editingStockId);
+                State.stock[index] = stockData;
+                State.editingStockId = null;
+                document.getElementById('stock-submit-btn').textContent = 'স্টক যোগ করুন';
+                document.getElementById('stock-cancel-btn').classList.add('d-none');
+            } else {
+                State.stock.push(stockData);
+            }
+
+            saveToStorage();
+            renderStockTable();
+            updateDashboard();
+            e.target.reset();
+            document.getElementById('stock-date').valueAsDate = new Date();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'সফল!',
+                text: 'স্টক তথ্য সংরক্ষণ করা হয়েছে।',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        });
+
+        window.editStock = (id) => {
+            const item = State.stock.find(s => s.id === id);
+            if (!item) return;
+
+            State.editingStockId = id;
+            document.getElementById('stock-id').value = item.id;
+            document.getElementById('stock-brand').value = item.brand;
+            document.getElementById('stock-packet-price').value = item.packetPrice || (item.purchasePrice * (item.pcsPerPacket || 20));
+            document.getElementById('stock-pcs-per-packet').value = item.pcsPerPacket || 20;
+            document.getElementById('stock-packet-qty').value = item.packetQty || (item.quantity / (item.pcsPerPacket || 20));
+            document.getElementById('stock-sell-price-pcs').value = item.sellPricePcs || '';
+            document.getElementById('stock-date').value = item.date;
+
+            document.getElementById('stock-submit-btn').textContent = 'আপডেট করুন';
+            document.getElementById('stock-cancel-btn').classList.remove('d-none');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        document.getElementById('stock-cancel-btn').addEventListener('click', () => {
+            State.editingStockId = null;
+            document.getElementById('stock-form').reset();
+            document.getElementById('stock-date').valueAsDate = new Date();
+            document.getElementById('stock-submit-btn').textContent = 'স্টক যোগ করুন';
+            document.getElementById('stock-cancel-btn').classList.add('d-none');
+        });
+
+        window.deleteStock = (id) => {
+            Swal.fire({
+                title: 'আপনি কি নিশ্চিত?',
+                text: "এই স্টক তথ্যটি ডিলিট হয়ে যাবে!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'হ্যাঁ, ডিলিট করুন!',
+                cancelButtonText: 'বাতিল'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    State.stock = State.stock.filter(s => s.id !== id);
+                    saveToStorage();
+                    renderStockTable();
+                    updateDashboard();
+                    Swal.fire('ডিলিট হয়েছে!', 'স্টক তথ্য মুছে ফেলা হয়েছে।', 'success');
+                }
+            });
+        };
+
+        // Sell Form
+        const updateSellTotal = () => {
+            const qty = parseInt(document.getElementById('sell-qty').value) || 0;
+            const price = parseFloat(document.getElementById('sell-price').value) || 0;
+            document.getElementById('sell-total').value = (qty * price).toFixed(2);
+        };
+
+        document.getElementById('sell-qty').addEventListener('input', updateSellTotal);
+        document.getElementById('sell-price').addEventListener('input', updateSellTotal);
+
+        document.getElementById('sell-brand').addEventListener('change', (e) => {
+            const brand = e.target.value;
+            const availabilityEl = document.getElementById('stock-availability');
+            const sellPriceInput = document.getElementById('sell-price');
+            
+            if (!brand) {
+                availabilityEl.classList.add('d-none');
+                sellPriceInput.value = '';
+                updateSellTotal();
+                return;
+            }
+
+            // Find the latest selling price for this brand from stock
+            const brandStock = State.stock.filter(s => s.brand === brand).sort((a, b) => new Date(b.date) - new Date(a.date));
+            if (brandStock.length > 0 && brandStock[0].sellPricePcs) {
+                sellPriceInput.value = brandStock[0].sellPricePcs;
+            } else {
+                sellPriceInput.value = '';
+            }
+
+            const summary = getBrandStockSummary();
+            const soldSoFar = State.sales.filter(s => s.brand === brand).reduce((sum, s) => sum + Number(s.pieces), 0);
+            const available = (summary[brand]?.totalQty || 0) - soldSoFar;
+            
+            document.getElementById('available-qty').textContent = available;
+            availabilityEl.classList.remove('d-none');
+            updateSellTotal();
+        });
+
+        document.getElementById('sell-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const date = document.getElementById('sell-date').value;
+            const brand = document.getElementById('sell-brand').value;
+            const pieces = parseInt(document.getElementById('sell-qty').value);
+            const sellPrice = parseFloat(document.getElementById('sell-price').value);
+            const totalAmount = parseFloat(document.getElementById('sell-total').value);
+
+            // Check availability
+            const summary = getBrandStockSummary();
+            const soldSoFar = State.sales.filter(s => s.brand === brand).reduce((sum, s) => sum + Number(s.pieces), 0);
+            const available = (summary[brand]?.totalQty || 0) - soldSoFar;
+
+            if (pieces > available) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'দুঃখিত!',
+                    text: `স্টকে পর্যাপ্ত পরিমাণ নেই। বর্তমানে আছে মাত্র ${available} পিস।`
+                });
+                return;
+            }
+
+            State.sales.push({ id: generateId(), date, brand, pieces, sellPrice, totalAmount });
+            saveToStorage();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'বিক্রি সফল!',
+                text: 'বিক্রির তথ্য রেকর্ড করা হয়েছে।',
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            e.target.reset();
+            document.getElementById('sell-date').valueAsDate = new Date();
+            document.getElementById('stock-availability').classList.add('d-none');
+            renderSalesTable();
+            updateDashboard();
+        });
+
+        window.deleteSale = (id) => {
+            Swal.fire({
+                title: 'আপনি কি নিশ্চিত?',
+                text: "এই বিক্রির তথ্যটি ডিলিট হয়ে যাবে!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'হ্যাঁ, ডিলিট করুন!',
+                cancelButtonText: 'বাতিল'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    State.sales = State.sales.filter(s => s.id !== id);
+                    saveToStorage();
+                    renderSalesTable();
+                    updateDashboard();
+                    Swal.fire('ডিলিট হয়েছে!', 'বিক্রির তথ্য মুছে ফেলা হয়েছে।', 'success');
+                }
+            });
+        };
+
+        // Filters
+        document.getElementById('apply-filters').addEventListener('click', () => {
+            State.filters.startDate = document.getElementById('filter-start-date').value;
+            State.filters.endDate = document.getElementById('filter-end-date').value;
+            State.filters.month = document.getElementById('filter-month').value;
+            State.filters.brand = document.getElementById('filter-brand').value;
+            renderSalesTable();
+        });
+
+        document.getElementById('reset-filters').addEventListener('click', () => {
+            document.getElementById('filter-start-date').value = '';
+            document.getElementById('filter-end-date').value = '';
+            document.getElementById('filter-month').value = '';
+            document.getElementById('filter-brand').value = '';
+            State.filters = { startDate: '', endDate: '', month: '', brand: '' };
+            renderSalesTable();
+        });
+
+        document.getElementById('profit-filter-month').addEventListener('change', renderProfitTable);
+
+        // Bulk Delete
+        const selectAllSales = document.getElementById('select-all-sales');
+        if (selectAllSales) {
+            selectAllSales.addEventListener('change', (e) => {
+                const checkboxes = document.querySelectorAll('.sale-checkbox');
+                checkboxes.forEach(cb => cb.checked = e.target.checked);
+                toggleBulkDeleteBtn();
+            });
+        }
+
+        document.addEventListener('change', (e) => {
+            if (e.target.classList.contains('sale-checkbox')) {
+                toggleBulkDeleteBtn();
+            }
+        });
+
+        const toggleBulkDeleteBtn = () => {
+            const selected = document.querySelectorAll('.sale-checkbox:checked').length;
+            const btn = document.getElementById('bulk-delete');
+            if (btn) {
+                if (selected > 0) {
+                    btn.classList.remove('d-none');
+                    btn.textContent = `${selected}টি ডিলিট করুন`;
+                } else {
+                    btn.classList.add('d-none');
+                }
+            }
+        };
+
+        const bulkDeleteBtn = document.getElementById('bulk-delete');
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.addEventListener('click', () => {
+                const selectedIds = Array.from(document.querySelectorAll('.sale-checkbox:checked')).map(cb => cb.value);
+                
+                Swal.fire({
+                    title: 'আপনি কি নিশ্চিত?',
+                    text: `${selectedIds.length}টি বিক্রির তথ্য ডিলিট হয়ে যাবে!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'হ্যাঁ, সব ডিলিট করুন!',
+                    cancelButtonText: 'বাতিল'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        State.sales = State.sales.filter(s => !selectedIds.includes(s.id));
+                        saveToStorage();
+                        renderSalesTable();
+                        updateDashboard();
+                        const selectAll = document.getElementById('select-all-sales');
+                        if (selectAll) selectAll.checked = false;
+                        toggleBulkDeleteBtn();
+                        Swal.fire('ডিলিট হয়েছে!', 'নির্বাচিত তথ্যগুলো মুছে ফেলা হয়েছে।', 'success');
+                    }
+                });
+            });
+        }
+
+        // CSV Export
+        document.getElementById('export-csv').addEventListener('click', () => {
+            if (State.sales.length === 0) {
+                Swal.fire('তথ্য নেই', 'এক্সপোর্ট করার জন্য কোন বিক্রির তথ্য নেই।', 'info');
+                return;
+            }
+
+            let csv = 'Date,Brand,Pieces,Sell Price,Total Amount\n';
+            State.sales.forEach(s => {
+                csv += `${s.date},"${s.brand}",${s.pieces},${s.sellPrice},${s.totalAmount}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `sales_report_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // Sorting
+        window.sortTable = (tableId, colIndex) => {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const isAsc = table.dataset.sortCol == colIndex && table.dataset.sortDir == 'asc';
+            const dir = isAsc ? 'desc' : 'asc';
+            
+            rows.sort((a, b) => {
+                let valA = a.cells[colIndex].textContent.trim();
+                let valB = b.cells[colIndex].textContent.trim();
+                
+                // Handle currency and numbers
+                if (valA.startsWith('৳')) valA = parseFloat(valA.replace(/[৳,]/g, ''));
+                if (valB.startsWith('৳')) valB = parseFloat(valB.replace(/[৳,]/g, ''));
+                
+                if (!isNaN(valA) && !isNaN(valB)) {
+                    return dir === 'asc' ? valA - valB : valB - valA;
+                }
+                
+                return dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            });
+
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
+            
+            table.dataset.sortCol = colIndex;
+            table.dataset.sortDir = dir;
+        };
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('stock-date').value = today;
+            document.getElementById('sell-date').value = today;
+
+            // Initial renders
+            updateDashboard();
+            renderStockTable();
+            renderSalesTable();
+            
+            // Default view
+            switchView('dashboard');
+
+            // Fetch from cloud on startup
+            if (State.cloudUrl) {
+                fetchFromCloud();
+            }
+        });
+    </script>
+</body>
+</html>
