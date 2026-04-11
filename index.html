@@ -1092,9 +1092,29 @@
                 if (available > 0) {
                     const col = document.createElement('div');
                     col.className = 'col-6';
+                    
+                    let brandImageHtml = '';
+                    if (brand === 'ক্যামেল') {
+                        brandImageHtml = `<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQt0kOHjtBGadnuHmHnepkmdJ_L-f2xJ88c9m1y2MoMh8ppXSx2xbC0SOU_&s=10" 
+                                           class="img-fluid rounded mb-2" 
+                                           style="height: 80px; width: 100%; object-fit: cover;"
+                                           referrerPolicy="no-referrer">`;
+                    } else if (brand === 'মার্লবোরো') {
+                        brandImageHtml = `<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTmr0z_NcossqW7l19Ewo3a7FiZ_oTyg9DYYzQgggc43A&s" 
+                                           class="img-fluid rounded mb-2" 
+                                           style="height: 80px; width: 100%; object-fit: cover;"
+                                           referrerPolicy="no-referrer">`;
+                    } else if (brand === 'বেনসন') {
+                        brandImageHtml = `<img src="https://tpackss.globaltobaccocontrol.org/sites/default/files/styles/500x500/public/pack_images/BAN_DHA_L1_001_1.JPG?itok=-zYABW32" 
+                                           class="img-fluid rounded mb-2" 
+                                           style="height: 80px; width: 100%; object-fit: cover;"
+                                           referrerPolicy="no-referrer">`;
+                    }
+
                     col.innerHTML = `
                         <div class="card h-100 border-0 shadow-sm product-card">
                             <div class="card-body p-3 text-center">
+                                ${brandImageHtml}
                                 <h6 class="fw-bold mb-2">${brand}</h6>
                                 <div class="price-tag number-font mb-2">${brandData.sellPricePcs || 0} <small>tk/pcs</small></div>
                                 <div class="small text-muted mb-3">স্টক: <span class="number-font fw-bold">${available}</span> পিস</div>
