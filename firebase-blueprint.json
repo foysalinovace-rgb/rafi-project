@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "Stock": {
+      "title": "Stock",
+      "description": "Represents cigarette stock entries",
+      "type": "object",
+      "properties": {
+        "brand": { "type": "string" },
+        "packetPrice": { "type": "number" },
+        "pcsPerPacket": { "type": "number" },
+        "packetQty": { "type": "number" },
+        "purchasePrice": { "type": "number" },
+        "quantity": { "type": "number" },
+        "sellPricePcs": { "type": "number" },
+        "date": { "type": "string", "format": "date" }
+      },
+      "required": ["brand", "quantity", "date"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "description": "Represents a cigarette sale",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "brand": { "type": "string" },
+        "pieces": { "type": "number" },
+        "sellPrice": { "type": "number" },
+        "totalAmount": { "type": "number" }
+      },
+      "required": ["date", "brand", "pieces", "totalAmount"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Represents a customer order",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "floor": { "type": "string" },
+        "pcs": { "type": "number" },
+        "brand": { "type": "string" },
+        "price": { "type": "number" },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["Pending", "Approved"] },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "pcs", "brand", "status", "date"]
+    }
+  },
+  "firestore": {
+    "stock": {
+      "schema": "Stock",
+      "description": "Collection of stock entries"
+    },
+    "sales": {
+      "schema": "Sale",
+      "description": "Collection of sale records"
+    },
+    "orders": {
+      "schema": "Order",
+      "description": "Collection of customer orders"
+    }
+  }
+}

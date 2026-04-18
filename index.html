@@ -153,7 +153,40 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
-        /* Dashboard Cards */
+        /* Report Tabs */
+        .report-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .report-btn {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .report-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .status-paid { background: #e6f4ea; color: #1e8e3e; }
+        .status-unpaid { background: #fce8e6; color: #d93025; }
         .summary-card {
             border-radius: 12px;
             padding: 16px;
@@ -177,6 +210,7 @@
         .bg-blue { background: linear-gradient(135deg, #4285f4, #1a73e8); }
         .bg-green { background: linear-gradient(135deg, #34a853, #1e8e3e); }
         .bg-orange { background: linear-gradient(135deg, #fbbc05, #f9ab00); }
+        .bg-red { background: linear-gradient(135deg, #ea4335, #d93025); }
 
         .summary-label { font-size: 0.8rem; opacity: 0.9; margin-bottom: 4px; }
         .summary-value { font-size: 1.4rem; font-weight: 700; }
@@ -329,7 +363,7 @@
         </div>
     </header>
 
-    <div class="sync-indicator px-3 py-1 bg-white border-bottom text-center" style="height: 24px;">
+    <div class="sync-indicator px-3 py-1 bg-white border-bottom text-center" style="height: 24px; display: none;">
         <span id="sync-status" class="small text-muted"></span>
     </div>
 
@@ -428,7 +462,7 @@
                         <label class="form-label">পাসওয়ার্ড</label>
                         <input type="password" class="form-control" id="login-pass" placeholder="******">
                     </div>
-                    <button class="btn btn-primary w-100" onclick="handleLogin()">লগইন করুন</button>
+                    <button class="btn btn-primary w-100 mb-2" onclick="handleLogin()">লগইন করুন</button>
                 </div>
             </div>
         </div>
@@ -444,24 +478,42 @@
                     </div>
                 </div>
                 <div class="col-6">
-                    <div class="summary-card bg-purple h-100 mb-0" style="background: linear-gradient(135deg, #673ab7, #512da8);">
-                        <div class="summary-label">মোট লাইফ টাইম আয়</div>
-                        <div class="summary-value number-font" id="dash-lifetime-income">৳0</div>
+                    <div class="summary-card bg-red h-100 mb-0">
+                        <div class="summary-label">স্টক সল্পতা</div>
+                        <div class="summary-value number-font" id="dash-low-stock-count">0</div>
                     </div>
                 </div>
             </div>
-            <div class="row g-2">
+            <div class="row g-2 mb-2">
                 <div class="col-6">
-                    <div class="summary-card bg-green">
+                    <div class="summary-card bg-green mb-0">
                         <div class="summary-label">আজকের বিক্রি</div>
                         <div class="summary-value number-font" id="dash-today-sales">৳0</div>
                     </div>
                 </div>
                 <div class="col-6">
-                    <div class="summary-card bg-orange">
+                    <div class="summary-card bg-orange mb-0">
                         <div class="summary-label">মাসিক লাভ</div>
                         <div class="summary-value number-font" id="dash-month-profit">৳0</div>
                     </div>
+                </div>
+            </div>
+            <div class="row g-2 mb-2">
+                <div class="col-12">
+                    <div class="summary-card bg-purple mb-0" style="background: linear-gradient(135deg, #673ab7, #512da8);">
+                        <div class="summary-label">মোট লাইফ টাইম আয়</div>
+                        <div class="summary-value number-font" id="dash-lifetime-income">৳0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="low-stock-alert-container" class="mb-3 d-none">
+                <div class="alert alert-danger p-2 mb-0 d-flex align-items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                    <div class="small fw-bold">স্টক সতর্কতা: কিছু ব্র্যান্ডের স্টক শেষ হতে চলেছে!</div>
+                </div>
+                <div id="low-stock-list" class="bg-white border border-top-0 rounded-bottom p-2 small shadow-sm">
+                    <!-- Low stock brands listed here -->
                 </div>
             </div>
 
@@ -528,13 +580,7 @@
                             <label class="form-label">ব্র্যান্ডের নাম</label>
                             <select class="form-select form-select-sm" id="stock-brand" required>
                                 <option value="">ব্র্যান্ড সিলেক্ট করুন</option>
-                                <option value="বেনসন">বেনসন</option>
-                                <option value="ক্যামেল">ক্যামেল</option>
-                                <option value="মার্লবোরো">মার্লবোরো</option>
-                                <option value="লাকি স্ট্রাইক">লাকি স্ট্রাইক</option>
-                                <option value="গোল্ড লিফ">গোল্ড লিফ</option>
-                                <option value="লাকিজ">লাকিজ</option>
-                                <option value="Other">Other</option>
+                                <!-- Brands will be injected here -->
                             </select>
                         </div>
                         <div class="row g-2">
@@ -607,6 +653,10 @@
                             <input type="date" class="form-control form-control-sm number-font" id="sell-date" required>
                         </div>
                         <div class="mb-2">
+                            <label class="form-label">গ্রাহকের নাম</label>
+                            <input type="text" class="form-control form-control-sm" id="sell-customer" placeholder="যেমন: রহিম সাহেব">
+                        </div>
+                        <div class="mb-2">
                             <label class="form-label">ব্র্যান্ড</label>
                             <select class="form-select form-select-sm" id="sell-brand" required>
                                 <option value="">ব্র্যান্ড সিলেক্ট করুন</option>
@@ -628,14 +678,23 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">মোট টাকা</label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text">৳</span>
-                                <input type="text" class="form-control number-font bg-light" id="sell-total" readonly value="0">
+                        <div class="row g-2">
+                            <div class="col-6 mb-2">
+                                <label class="form-label">পেমেন্ট স্ট্যাটাস</label>
+                                <select class="form-select form-select-sm" id="sell-payment-status">
+                                    <option value="Paid">Paid</option>
+                                    <option value="Unpaid">Unpaid</option>
+                                </select>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="form-label">মোট টাকা</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">৳</span>
+                                    <input type="text" class="form-control number-font bg-light" id="sell-total" readonly value="0">
+                                </div>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 py-2 fs-6">বিক্রি সম্পন্ন করুন</button>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fs-6 mt-2">বিক্রি সম্পন্ন করুন</button>
                     </form>
                 </div>
             </div>
@@ -643,26 +702,32 @@
 
         <!-- VIEW: REPORT -->
         <div id="view-report" class="view-container">
-            <div class="card mb-3">
-                <div class="card-body">
+            <div class="report-actions">
+                <button class="report-btn active" onclick="switchReport('sales')">বিক্রি রিপোর্ট</button>
+                <button class="report-btn" onclick="switchReport('stock')">স্টক রিপোর্ট</button>
+                <button class="report-btn" onclick="switchReport('unpaid')">বাকি রিপোর্ট</button>
+            </div>
+
+            <div id="report-filter-section" class="card mb-3">
+                <div class="card-body p-3">
                     <div class="row g-2">
                         <div class="col-6">
-                            <label class="form-label">শুরু</label>
-                            <input type="date" class="form-control number-font" id="filter-start-date">
+                            <label class="form-label small">শুরু তারিখ</label>
+                            <input type="date" class="form-control form-control-sm number-font" id="filter-start-date">
                         </div>
                         <div class="col-6">
-                            <label class="form-label">শেষ</label>
-                            <input type="date" class="form-control number-font" id="filter-end-date">
+                            <label class="form-label small">শেষ তারিখ</label>
+                            <input type="date" class="form-control form-control-sm number-font" id="filter-end-date">
                         </div>
                         <div class="col-6">
-                            <label class="form-label">মাস</label>
-                            <select class="form-select" id="filter-month">
+                            <label class="form-label small">মাস</label>
+                            <select class="form-select form-select-sm" id="filter-month">
                                 <option value="">সব মাস</option>
                             </select>
                         </div>
                         <div class="col-6">
-                            <label class="form-label">ব্র্যান্ড</label>
-                            <select class="form-select" id="filter-brand">
+                            <label class="form-label small">ব্র্যান্ড</label>
+                            <select class="form-select form-select-sm" id="filter-brand">
                                 <option value="">সব ব্র্যান্ড</option>
                             </select>
                         </div>
@@ -674,25 +739,68 @@
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>বিক্রি রিপোর্ট</span>
-                    <button class="btn btn-success btn-sm" id="export-csv">CSV</button>
+            <div id="report-content-sales">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>বিক্রি রিপোর্ট</span>
+                        <button class="btn btn-success btn-sm" id="export-csv">CSV</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>তারিখ & নাম</th>
+                                        <th>ব্র্যান্ড & অবস্থা</th>
+                                        <th>পিস</th>
+                                        <th>মোট</th>
+                                        <th>অ্যাকশন</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sales-list-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0" id="sales-table">
-                            <thead>
-                                <tr>
-                                    <th>তারিখ</th>
-                                    <th>ব্র্যান্ড</th>
-                                    <th>পিস</th>
-                                    <th>মোট</th>
-                                    <th>অ্যাকশন</th>
-                                </tr>
-                            </thead>
-                            <tbody id="sales-list-body"></tbody>
-                        </table>
+            </div>
+
+            <div id="report-content-stock" class="d-none">
+                <div class="card">
+                    <div class="card-header fw-bold">স্টক রিপোর্ট</div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ব্র্যান্ড</th>
+                                        <th class="text-center">স্টক (পিস)</th>
+                                        <th class="text-end">ভ্যালু</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="report-stock-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="report-content-unpaid" class="d-none">
+                <div class="card">
+                    <div class="card-header fw-bold">বাকি রিপোর্ট (Unpaid)</div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>তারিখ & নাম</th>
+                                        <th>ব্র্যান্ড</th>
+                                        <th>বাকি টাকা</th>
+                                        <th>অ্যাকশন</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="unpaid-list-body"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -741,25 +849,48 @@
         <!-- VIEW: SETTINGS -->
         <div id="view-settings" class="view-container">
             <div class="card">
-                <div class="card-header">ক্লাউড সিঙ্ক সেটিংস (Google Sheets)</div>
+                <div class="card-header">ডাটাবেস সেটিংস (Firebase)</div>
                 <div class="card-body">
-                    <p class="small text-muted mb-3">আপনার গুগল শিট অ্যাপ স্ক্রিপ্ট URL এখানে দিন যাতে ডাটা অনলাইনে সেভ থাকে।</p>
+                    <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+                        <div>আপনার অ্যাপটি এখন রিয়েল-টাইম ডাটাবেসে সিঙ্ক হচ্ছে।</div>
+                    </div>
+                    <p class="small text-muted mb-0">অর্ডার এবং স্টক সব ডিভাইসে অটোমেটিক আপডেট হবে। আলাদা করে সেভ করার প্রয়োজন নেই।</p>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header fw-bold">ব্র্যান্ড ম্যানেজমেন্ট</div>
+                <div class="card-body">
+                    <div class="input-group input-group-sm mb-3">
+                        <input type="text" id="new-brand-input" class="form-control" placeholder="নতুন ব্র্যান্ডের নাম">
+                        <button class="btn btn-primary" onclick="addNewBrand()">যোগ করুন</button>
+                    </div>
+                    <div id="brands-list-admin" class="d-flex flex-wrap gap-2">
+                        <!-- Brands will be listed here -->
+                    </div>
+                </div>
+            </div>
+            <div class="card mt-3">
+                <div class="card-header fw-bold">সিস্টেম কনফিগারেশন</div>
+                <div class="card-body">
                     <div class="mb-3">
-                        <label class="form-label">Web App URL</label>
-                        <input type="url" class="form-control" id="cloud-url-input" placeholder="https://script.google.com/macros/s/.../exec">
+                        <label class="form-label small fw-bold">লো স্টক ওয়ার্নিং (পিস)</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" id="threshold-input" class="form-control" placeholder="যেমন: ১০">
+                            <button class="btn btn-primary" onclick="updateThreshold()">সেভ করুন</button>
+                        </div>
+                        <div class="form-text small">কোন ব্র্যান্ডের স্টক এই পরিমাণের নিচে নামলে ওয়ার্নিং দেখাবে।</div>
                     </div>
-                    <button class="btn btn-primary w-100 mb-2" onclick="saveCloudSettings()">সেটিংস সেভ করুন</button>
-                    <button class="btn btn-outline-success w-100" onclick="fetchFromCloud()">শিট থেকে ডাটা লোড করুন</button>
-                    
-                    <div class="mt-4 p-3 bg-light rounded border">
-                        <h6 class="fw-bold small">কিভাবে সেটআপ করবেন?</h6>
-                        <ol class="small mb-0 ps-3">
-                            <li>গুগল শিট খুলুন।</li>
-                            <li>Extensions > Apps Script-এ যান।</li>
-                            <li>প্রদত্ত কোডটি পেস্ট করে Deploy করুন।</li>
-                            <li>Web App URL কপি করে এখানে বসান।</li>
-                        </ol>
-                    </div>
+                </div>
+            </div>
+            <div class="card mt-3">
+                <div class="card-body">
+                    <button class="btn btn-outline-primary btn-sm w-100" onclick="forceReSync()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                        ফোর্স ডাটা সিঙ্ক
+                    </button>
+                    <div class="small text-muted mt-2">ডাটা সিঙ্ক হতে দেরি হলে বা ডাটা আপডেট না হলে এই বাটনটি ব্যবহার করুন।</div>
                 </div>
             </div>
         </div>
@@ -777,16 +908,28 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script>
+    <script type="module">
+        import { db, auth } from './src/firebase';
+        import { 
+            collection, onSnapshot, addDoc, updateDoc, deleteDoc, 
+            doc, setDoc, query, orderBy, serverTimestamp, 
+            getDocs, where
+        } from 'firebase/firestore';
+        import { 
+            signInAnonymously, onAuthStateChanged, signOut 
+        } from 'firebase/auth';
+
         // --- DATA STORAGE & STATE ---
         const State = {
-            stock: JSON.parse(localStorage.getItem('cig_stock')) || [],
-            sales: JSON.parse(localStorage.getItem('cig_sales')) || [],
-            orders: JSON.parse(localStorage.getItem('cig_orders')) || [],
-            cloudUrl: localStorage.getItem('cig_cloud_url') || 'https://script.google.com/macros/s/AKfycbxlkB4I3Y6_Qg9WWk0XKa4a-NsXqzmJkOMH_9Gh5gMda9g-nzRMJ7CeD5XqXmBhN0GP/exec',
+            stock: JSON.parse(localStorage.getItem('cig_cache_stock') || '[]'),
+            sales: JSON.parse(localStorage.getItem('cig_cache_sales') || '[]'),
+            orders: JSON.parse(localStorage.getItem('cig_cache_orders') || '[]'),
+            brands: JSON.parse(localStorage.getItem('cig_cache_brands') || '[]'),
+            lowStockThreshold: parseInt(localStorage.getItem('cig_low_stock_threshold') || '10'),
             isSyncing: false,
             isAdmin: localStorage.getItem('cig_is_admin') === 'true',
             editingStockId: null,
+            currentReport: 'sales',
             filters: {
                 startDate: '',
                 endDate: '',
@@ -795,71 +938,210 @@
             }
         };
 
+        // Firestore Error Handler
+        const handleFirestoreError = (error, operation, path) => {
+            const errInfo = {
+                error: error.message,
+                operation,
+                path,
+                auth: auth.currentUser ? { uid: auth.currentUser.uid, email: auth.currentUser.email } : null
+            };
+            console.error('Firestore Error:', JSON.stringify(errInfo));
+            // Show user-friendly message
+            if (error.code === 'permission-denied') {
+                Swal.fire('অ্যাক্সেস ডিনাইড', 'আপনার এই কাজটি করার অনুমতি নেই।', 'error');
+            }
+        };
+
         const saveToStorage = () => {
-            localStorage.setItem('cig_stock', JSON.stringify(State.stock));
-            localStorage.setItem('cig_sales', JSON.stringify(State.sales));
-            localStorage.setItem('cig_orders', JSON.stringify(State.orders));
-            localStorage.setItem('cig_cloud_url', State.cloudUrl);
             localStorage.setItem('cig_is_admin', State.isAdmin);
+            localStorage.setItem('cig_low_stock_threshold', State.lowStockThreshold);
+            localStorage.setItem('cig_cache_stock', JSON.stringify(State.stock));
+            localStorage.setItem('cig_cache_sales', JSON.stringify(State.sales));
+            localStorage.setItem('cig_cache_orders', JSON.stringify(State.orders));
+            localStorage.setItem('cig_cache_brands', JSON.stringify(State.brands));
+        };
+
+        let unsubscribers = [];
+        const clearListeners = () => {
+            unsubscribers.forEach(unsub => unsub());
+            unsubscribers = [];
+        };
+
+        window.forceReSync = () => {
+            clearListeners();
+            initRealtimeData();
+            Swal.fire({
+                title: 'সিঙ্কিং...',
+                text: 'ডাটা কানেক্ট করা হচ্ছে',
+                timer: 1000,
+                showConfirmButton: false,
+                didOpen: () => Swal.showLoading()
+            });
+        };
+
+        // Initialize Firebase Real-time listeners
+        const initRealtimeData = () => {
+            updateSyncStatus('ডাটা কানেক্ট হচ্ছে...');
             
-            if (State.cloudUrl) {
-                syncToCloud();
-            }
-        };
+            // Listen to Stock
+            const unsubStock = onSnapshot(collection(db, 'stock'), (snapshot) => {
+                State.stock = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                saveToStorage();
+                refreshAllViews();
+            }, (error) => handleFirestoreError(error, 'LIST', 'stock'));
+            unsubscribers.push(unsubStock);
 
-        const syncToCloud = async () => {
-            if (!State.cloudUrl || State.isSyncing) return;
-            State.isSyncing = true;
-            updateSyncStatus('সিঙ্ক হচ্ছে...');
-            try {
-                await fetch(State.cloudUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        stock: State.stock,
-                        sales: State.sales,
-                        orders: State.orders
-                    })
-                });
-                updateSyncStatus('ক্লাউডে সেভ হয়েছে', 'text-success');
-            } catch (error) {
-                updateSyncStatus('সিঙ্ক ব্যর্থ', 'text-danger');
-            } finally {
-                State.isSyncing = false;
-                setTimeout(() => updateSyncStatus(''), 3000);
-            }
-        };
+            // Listen to Sales
+            const unsubSales = onSnapshot(collection(db, 'sales'), (snapshot) => {
+                State.sales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                saveToStorage();
+                refreshAllViews();
+            }, (error) => handleFirestoreError(error, 'LIST', 'sales'));
+            unsubscribers.push(unsubSales);
 
-        const fetchFromCloud = async () => {
-            if (!State.cloudUrl) return;
-            updateSyncStatus('ডাটা লোড হচ্ছে...');
-            try {
-                const response = await fetch(State.cloudUrl);
-                const data = await response.json();
-                if (data) {
-                    State.stock = data.stock || [];
-                    State.sales = data.sales || [];
-                    State.orders = data.orders || [];
-                    saveToStorage();
-                    window.updateDashboard();
-                    window.renderStockTable();
-                    window.renderSalesTable();
-                    window.renderProfitTable();
-                    window.renderHomeProducts();
-                    window.renderAdminOrders();
-                    updateSyncStatus('ডাটা আপডেট হয়েছে', 'text-success');
+            // Listen to Orders
+            const unsubOrders = onSnapshot(collection(db, 'orders'), (snapshot) => {
+                State.orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                saveToStorage();
+                refreshAllViews();
+                updateSyncStatus('রিয়েল-টাইম কানেক্টেড', 'text-success');
+                setTimeout(() => updateSyncStatus(''), 2000);
+            }, (error) => handleFirestoreError(error, 'LIST', 'orders'));
+            unsubscribers.push(unsubOrders);
+
+            // Listen to Brands
+            const unsubBrands = onSnapshot(collection(db, 'brands'), (snapshot) => {
+                const brandsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (brandsData.length === 0) {
+                    const initialBrands = ["বেনসন", "ক্যামেল", "মার্লবোরো", "লাকি স্ট্রাইক", "গোল্ড লিফ", "লাকিজ", "Other"];
+                    initialBrands.forEach(b => {
+                        addDoc(collection(db, 'brands'), { name: b });
+                    });
                 }
-            } catch (error) {
-                updateSyncStatus('লোড ব্যর্থ', 'text-danger');
-            } finally {
-                setTimeout(() => updateSyncStatus(''), 3000);
+                State.brands = brandsData.map(b => b.name).sort();
+                saveToStorage();
+                refreshAllViews();
+            }, (error) => handleFirestoreError(error, 'LIST', 'brands'));
+            unsubscribers.push(unsubBrands);
+        };
+
+        const refreshAllViews = () => {
+            window.updateDashboard();
+            window.renderStockTable();
+            window.renderSalesTable();
+            window.renderProfitTable();
+            window.renderHomeProducts();
+            window.renderAdminOrders();
+            renderBrandsManager();
+            updateBrandDropdowns();
+        };
+
+        window.updateThreshold = () => {
+            const input = document.getElementById('threshold-input');
+            const val = parseInt(input.value);
+            if (isNaN(val) || val < 0) {
+                Swal.fire('ভুল!', 'সঠিক সংখ্যা দিন।', 'error');
+                return;
+            }
+            State.lowStockThreshold = val;
+            saveToStorage();
+            updateDashboard();
+            Swal.fire('সফল!', 'স্টক থ্রেশহোল্ড আপডেট হয়েছে।', 'success');
+        };
+
+        const updateBrandDropdowns = () => {
+            const dropdownIds = ['stock-brand', 'sell-brand', 'filter-brand'];
+            dropdownIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const currentVal = el.value;
+                const defaultText = el.options[0]?.text || (id === 'filter-brand' ? 'সব ব্র্যান্ড' : 'ব্র্যান্ড সিলেক্ট করুন');
+                
+                el.innerHTML = `<option value="">${defaultText}</option>` + 
+                    State.brands.map(b => `<option value="${b}" ${b === currentVal ? 'selected' : ''}>${b}</option>`).join('');
+            });
+
+            // Update threshold input value if in settings
+            const thresholdInput = document.getElementById('threshold-input');
+            if (thresholdInput) {
+                thresholdInput.value = State.lowStockThreshold;
+            }
+        };
+
+        const renderBrandsManager = () => {
+            const list = document.getElementById('brands-list-admin');
+            if (!list) return;
+            list.innerHTML = '';
+            State.brands.forEach(brand => {
+                const badge = document.createElement('div');
+                badge.className = 'badge bg-light border text-dark p-2 d-flex align-items-center gap-2';
+                badge.innerHTML = `
+                    ${brand}
+                    <span class="text-danger cursor-pointer" onclick="deleteBrand('${brand}')" style="cursor:pointer">×</span>
+                `;
+                list.appendChild(badge);
+            });
+        };
+
+        window.addNewBrand = async () => {
+            const input = document.getElementById('new-brand-input');
+            const name = input.value.trim();
+            if (!name) return;
+            if (State.brands.includes(name)) {
+                Swal.fire('ভুল!', 'এই ব্র্যান্ডটি অলরেডি আছে।', 'error');
+                return;
+            }
+            try {
+                await addDoc(collection(db, 'brands'), { name });
+                input.value = '';
+                Swal.fire('সফল!', 'নতুন ব্র্যান্ড যুক্ত হয়েছে।', 'success');
+            } catch (err) {
+                handleFirestoreError(err, 'CREATE', 'brands');
+            }
+        };
+
+        window.deleteBrand = async (name) => {
+            const brandDoc = (await getDocs(query(collection(db, 'brands'), where('name', '==', name)))).docs[0];
+            if (brandDoc) {
+                Swal.fire({
+                    title: 'আপনি কি নিশ্চিত?',
+                    text: `"${name}" ব্র্যান্ডটি মুছে ফেলা হবে!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'হ্যাঁ, ডিলিট করুন'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        try {
+                            await deleteDoc(doc(db, 'brands', brandDoc.id));
+                            Swal.fire('ডিলিট হয়েছে!', 'ব্র্যান্ডটি মুছে ফেলা হয়েছে।', 'success');
+                        } catch (err) {
+                            handleFirestoreError(err, 'DELETE', 'brands/' + name);
+                        }
+                    }
+                });
+            }
+        };
+
+        window.updateThreshold = () => {
+            const val = parseInt(document.getElementById('low-stock-threshold-input').value);
+            if (val > 0) {
+                State.lowStockThreshold = val;
+                saveToStorage();
+                Swal.fire('সফল!', 'থ্রেশহোল্ড আপডেট করা হয়েছে।', 'success');
+                window.updateDashboard();
             }
         };
 
         const updateSyncStatus = (text, className = '') => {
             const el = document.getElementById('sync-status');
-            if (el) {
+            const container = document.querySelector('.sync-indicator');
+            if (el && container) {
+                if (!State.isAdmin) {
+                    container.style.display = 'none';
+                    return;
+                }
+                container.style.display = 'block';
                 el.textContent = text;
                 el.className = 'small ' + className;
             }
@@ -890,6 +1172,19 @@
         // --- BUSINESS LOGIC ---
         const getBrandStockSummary = () => {
             const summary = {};
+            // Initialize with all existing brands
+            State.brands.forEach(brand => {
+                summary[brand] = {
+                    brand: brand,
+                    totalQty: 0,
+                    totalInvestment: 0,
+                    avgPurchasePrice: 0,
+                    sellPricePcs: 0,
+                    latestDate: '',
+                    entries: []
+                };
+            });
+
             State.stock.forEach(item => {
                 if (!summary[item.brand]) {
                     summary[item.brand] = {
@@ -1000,15 +1295,25 @@
                 if (viewName === 'report') window.renderSalesTable();
                 if (viewName === 'profit') window.renderProfitTable();
                 if (viewName === 'admin-orders') window.renderAdminOrders();
+                if (viewName === 'settings') {
+                    const thresholdInput = document.getElementById('low-stock-threshold-input');
+                    if (thresholdInput) thresholdInput.value = State.lowStockThreshold;
+                    renderBrandsManager();
+                }
             } catch (err) {}
         };
 
         const updateNav = () => {
             const nav = document.getElementById('app-nav');
             const userIcon = document.getElementById('header-user-icon');
+            const syncIndicator = document.querySelector('.sync-indicator');
             const pendingOrdersCount = State.orders.filter(o => o.status === 'Pending').length;
             const badgeHtml = pendingOrdersCount > 0 ? `<span class="nav-badge number-font">${pendingOrdersCount}</span>` : '';
             
+            if (syncIndicator) {
+                syncIndicator.style.display = State.isAdmin ? 'block' : 'none';
+            }
+
             if (State.isAdmin) {
                 nav.innerHTML = `
                     <button class="nav-item-btn" onclick="switchView('dashboard')"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>ড্যাশবোর্ড</button>
@@ -1018,6 +1323,7 @@
                     </button>
                     <button class="nav-item-btn" onclick="switchView('stock')"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>স্টক</button>
                     <button class="nav-item-btn" onclick="switchView('report')"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>রিপোর্ট</button>
+                    <button class="nav-item-btn" onclick="switchView('settings')"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>সেটিংস</button>
                 `;
                 userIcon.innerHTML = `<div onclick="handleLogout()" class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; cursor: pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg></div>`;
             } else {
@@ -1029,24 +1335,31 @@
             }
         };
 
-        window.handleLogin = () => {
+        window.handleLogin = async () => {
             const id = document.getElementById('login-id').value;
             const pass = document.getElementById('login-pass').value;
             if (id === '007' && pass === '123456') {
                 State.isAdmin = true;
                 saveToStorage();
-                switchView('dashboard');
-                Swal.fire('সফল!', 'এডমিন হিসেবে লগইন করেছেন।', 'success');
+                window.switchView('dashboard');
+                updateNav();
+                Swal.fire('সফল!', 'এডমিন লগইন হয়েছে।', 'success');
             } else {
                 Swal.fire('ভুল!', 'আইডি বা পাসওয়ার্ড সঠিক নয়।', 'error');
             }
         };
 
-        window.handleLogout = () => {
-            State.isAdmin = false;
-            saveToStorage();
-            switchView('home');
-            Swal.fire('লগআউট!', 'আপনি লগআউট করেছেন।', 'info');
+        window.handleLogout = async () => {
+            try {
+                await signOut(auth);
+                State.isAdmin = false;
+                saveToStorage();
+                window.switchView('home');
+                updateNav();
+                Swal.fire('লগআউট!', 'আপনি লগআউট করেছেন।', 'info');
+            } catch (err) {
+                console.error('Logout error:', err);
+            }
         };
 
         // --- HOME & ORDERING ---
@@ -1148,7 +1461,7 @@
             switchView('order-form');
         };
 
-        window.submitOrder = () => {
+        window.submitOrder = async () => {
             const name = document.getElementById('order-name').value;
             const floor = document.getElementById('order-floor').value;
             const pcs = parseInt(document.getElementById('order-pcs').value);
@@ -1164,7 +1477,6 @@
             }
 
             const order = {
-                id: generateId(),
                 name,
                 floor,
                 pcs,
@@ -1175,10 +1487,14 @@
                 date: new Date().toISOString()
             };
 
-            State.orders.push(order);
-            saveToStorage();
-            Swal.fire('সফল!', 'আপনার অর্ডারটি গ্রহণ করা হয়েছে।', 'success');
-            switchView('home');
+            try {
+                updateSyncStatus('অর্ডার পাঠানো হচ্ছে...');
+                await addDoc(collection(db, 'orders'), order);
+                Swal.fire('সফল!', 'আপনার অর্ডারটি গ্রহণ করা হয়েছে।', 'success');
+                window.switchView('home');
+            } catch (err) {
+                handleFirestoreError(err, 'CREATE', 'orders');
+            }
         };
 
         window.renderUserOrders = () => {
@@ -1255,31 +1571,38 @@
             });
         };
 
-        window.approveOrder = (id) => {
+        window.approveOrder = async (id) => {
             const order = State.orders.find(o => o.id === id);
             if (order) {
-                order.status = 'Approved';
-                // Automatically add to sales
-                State.sales.push({
-                    id: generateId(),
-                    date: new Date().toISOString().split('T')[0],
-                    brand: order.brand,
-                    pieces: order.pcs,
-                    sellPrice: order.price,
-                    totalAmount: order.total
-                });
-                saveToStorage();
-                renderAdminOrders();
-                window.updateDashboard(); // Ensure dashboard updates
-                Swal.fire('সফল!', 'অর্ডারটি অ্যাপ্রুভ করা হয়েছে।', 'success');
+                try {
+                    updateSyncStatus('অ্যাপ্রুভ হচ্ছে...');
+                    // Update status to Approved
+                    await updateDoc(doc(db, 'orders', id), { status: 'Approved' });
+                    
+                    // Add to sales
+                    await addDoc(collection(db, 'sales'), {
+                        date: new Date().toISOString().split('T')[0],
+                        brand: order.brand,
+                        pieces: order.pcs,
+                        sellPrice: order.price,
+                        totalAmount: order.total
+                    });
+                    
+                    Swal.fire('সফল!', 'অর্ডারটি অ্যাপ্রুভ করা হয়েছে।', 'success');
+                } catch (err) {
+                    handleFirestoreError(err, 'UPDATE', 'orders/' + id);
+                }
             }
         };
 
-        window.deleteOrder = (id) => {
-            State.orders = State.orders.filter(o => o.id !== id);
-            saveToStorage();
-            renderAdminOrders();
-            renderUserOrders();
+        window.deleteOrder = async (id) => {
+            try {
+                await deleteDoc(doc(db, 'orders', id));
+                renderAdminOrders();
+                renderUserOrders();
+            } catch (err) {
+                handleFirestoreError(err, 'DELETE', 'orders/' + id);
+            }
         };
 
         window.updateDashboard = () => {
@@ -1302,6 +1625,7 @@
             const lifetimeIncomeEl = document.getElementById('dash-lifetime-income');
             const todaySalesEl = document.getElementById('dash-today-sales');
             const monthProfitEl = document.getElementById('dash-month-profit');
+            const lowStockCountEl = document.getElementById('dash-low-stock-count');
 
             if (totalStockEl) totalStockEl.textContent = formatCurrency(totalStockValue);
             if (lifetimeIncomeEl) lifetimeIncomeEl.textContent = formatCurrency(totalLifeTimeIncome);
@@ -1312,13 +1636,46 @@
                 monthProfitEl.className = 'summary-value number-font ' + (monthProfit >= 0 ? 'profit-text' : 'loss-text');
             }
 
+            // Low Stock Alerts logic
+            const lowStockItems = [];
+            const displayBrands = State.brands.length > 0 ? State.brands : ["বেনসন", "ক্যামেল", "মার্লবোরো", "লাকি স্ট্রাইক", "গোল্ড লিফ", "লাকিজ", "Other"];
+            
+            // Collect low stock list
+            displayBrands.forEach(brand => {
+                const brandData = stockSummary[brand] || { totalQty: 0 };
+                const soldSoFar = State.sales.filter(s => s.brand === brand).reduce((sum, s) => sum + Number(s.pieces), 0);
+                const pendingOrders = State.orders.filter(o => o.brand === brand && o.status === 'Pending').reduce((sum, o) => sum + Number(o.pcs), 0);
+                const available = (brandData.totalQty || 0) - soldSoFar - pendingOrders;
+                
+                if (available < State.lowStockThreshold && available >= 0) {
+                    lowStockItems.push({ brand, available });
+                }
+            });
+
+            if (lowStockCountEl) lowStockCountEl.textContent = lowStockItems.length;
+
+            const alertContainer = document.getElementById('low-stock-alert-container');
+            const alertList = document.getElementById('low-stock-list');
+            if (alertContainer && alertList) {
+                if (lowStockItems.length > 0) {
+                    alertContainer.classList.remove('d-none');
+                    alertList.innerHTML = lowStockItems.map(item => 
+                        `<div class="d-flex justify-content-between border-bottom py-1">
+                            <span>${item.brand}</span>
+                            <span class="text-danger fw-bold">${item.available} পিস বাকি</span>
+                        </div>`
+                    ).join('');
+                } else {
+                    alertContainer.classList.add('d-none');
+                }
+            }
+
             // Update Stock Report Table in Dashboard
             const stockReportBody = document.getElementById('dash-stock-report-body');
             if (stockReportBody) {
                 stockReportBody.innerHTML = '';
-                const brands = ["বেনসন", "ক্যামেল", "মার্লবোরো", "লাকি স্ট্রাইক", "গোল্ড লিফ", "লাকিজ", "Other"];
                 
-                brands.forEach(brand => {
+                displayBrands.forEach(brand => {
                     const brandData = stockSummary[brand] || { totalQty: 0, sellPricePcs: 0 };
                     const soldSoFar = State.sales.filter(s => s.brand === brand).reduce((sum, s) => sum + Number(s.pieces), 0);
                     const pendingOrders = State.orders.filter(o => o.brand === brand && o.status === 'Pending').reduce((sum, o) => sum + Number(o.pcs), 0);
@@ -1326,9 +1683,11 @@
                     
                     if (available > 0 || brandData.totalQty > 0) {
                         const tr = document.createElement('tr');
+                        const isLow = available < State.lowStockThreshold;
+                        tr.className = isLow ? 'table-warning' : '';
                         tr.innerHTML = `
-                            <td>${brand}</td>
-                            <td class="text-center number-font">${available}</td>
+                            <td class="${isLow ? 'fw-bold text-danger' : ''}">${brand} ${isLow ? '⚠️' : ''}</td>
+                            <td class="text-center number-font ${isLow ? 'text-danger fw-bold' : ''}">${available}</td>
                             <td class="text-end number-font">${formatCurrency(available * (brandData.sellPricePcs || 0))}</td>
                         `;
                         stockReportBody.appendChild(tr);
@@ -1363,8 +1722,6 @@
                 }
             }
         };
-
-        const BRANDS = ["বেনসন", "ক্যামেল", "মার্লবোরো", "লাকি স্ট্রাইক", "গোল্ড লিফ", "লাকিজ", "Other"];
 
         window.renderStockTable = () => {
             const tbody = document.getElementById('stock-list-body');
@@ -1407,22 +1764,6 @@
 
             const badge = document.getElementById('total-investment-badge');
             if (badge) badge.textContent = formatCurrency(totalInvestment);
-            
-            // Update sell dropdown
-            const sellBrandSelect = document.getElementById('sell-brand');
-            if (sellBrandSelect) {
-                const currentVal = sellBrandSelect.value;
-                sellBrandSelect.innerHTML = '<option value="">ব্র্যান্ড সিলেক্ট করুন</option>' + 
-                    BRANDS.map(b => `<option value="${b}" ${b === currentVal ? 'selected' : ''}>${b}</option>`).join('');
-            }
-            
-            // Update filter dropdown
-            const filterBrandSelect = document.getElementById('filter-brand');
-            if (filterBrandSelect) {
-                const currentVal = filterBrandSelect.value;
-                filterBrandSelect.innerHTML = '<option value="">সব ব্র্যান্ড</option>' + 
-                    BRANDS.map(b => `<option value="${b}" ${b === currentVal ? 'selected' : ''}>${b}</option>`).join('');
-            }
         };
 
         window.renderSalesTable = () => {
@@ -1443,9 +1784,16 @@
 
             filtered.forEach(sale => {
                 const tr = document.createElement('tr');
+                const statusClass = sale.paymentStatus === 'Paid' ? 'status-paid' : 'status-unpaid';
                 tr.innerHTML = `
-                    <td class="number-font small">${formatDate(sale.date)}</td>
-                    <td><div class="fw-bold small">${sale.brand}</div></td>
+                    <td>
+                        <div class="number-font small text-muted">${formatDate(sale.date)}</div>
+                        <div class="fw-bold small">${sale.customerName || 'গৃহীত'}</div>
+                    </td>
+                    <td>
+                        <div class="small fw-bold">${sale.brand}</div>
+                        <span class="status-badge ${statusClass}">${sale.paymentStatus || 'Paid'}</span>
+                    </td>
                     <td class="number-font">${sale.pieces}</td>
                     <td class="number-font">${formatCurrency(sale.totalAmount)}</td>
                     <td>
@@ -1457,7 +1805,11 @@
                 tbody.appendChild(tr);
             });
             
-            // Update month filter dropdown
+            // Re-render other reports if they are active
+            if (State.currentReport === 'stock') renderStockReport();
+            if (State.currentReport === 'unpaid') renderUnpaidReport();
+            
+            // ... (rest of the month select logic remains similar)
             const monthSelect = document.getElementById('filter-month');
             const profitMonthSelect = document.getElementById('profit-filter-month');
             const months = Array.from(new Set(State.sales.map(s => getMonthKey(s.date)))).sort().reverse();
@@ -1497,6 +1849,111 @@
             updateProfitChart(data);
         };
 
+        // --- ADVANCED REPORTS ---
+        State.currentReport = 'sales';
+        window.switchReport = (type) => {
+            State.currentReport = type;
+            
+            // Update UI
+            document.querySelectorAll('.report-btn').forEach(btn => btn.classList.remove('active'));
+            const clickedBtn = Array.from(document.querySelectorAll('.report-btn')).find(btn => btn.innerText.includes(
+                type === 'sales' ? 'বিক্রি' : (type === 'stock' ? 'স্টক' : 'বাকি')
+            ));
+            if (clickedBtn) clickedBtn.classList.add('active');
+
+            // Hide all report contents
+            document.getElementById('report-content-sales').classList.add('d-none');
+            document.getElementById('report-content-stock').classList.add('d-none');
+            document.getElementById('report-content-unpaid').classList.add('d-none');
+            
+            // Show target
+            document.getElementById(`report-content-${type}`).classList.remove('d-none');
+
+            // Show/Hide filters
+            const filterSection = document.getElementById('report-filter-section');
+            if (type === 'unpaid' || type === 'stock') {
+                filterSection.classList.add('d-none');
+            } else {
+                filterSection.classList.remove('d-none');
+            }
+
+            // Render
+            if (type === 'sales') window.renderSalesTable();
+            if (type === 'stock') renderStockReport();
+            if (type === 'unpaid') renderUnpaidReport();
+        };
+
+        const renderStockReport = () => {
+            const tbody = document.getElementById('report-stock-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            const stockSummary = getBrandStockSummary();
+            const displayBrands = State.brands.length > 0 ? State.brands : ["Benson", "Camel", "Marlboro", "Lucky Strike", "Gold Leaf", "Luckies", "Other"];
+            
+            displayBrands.forEach(brand => {
+                const brandData = stockSummary[brand] || { totalQty: 0, sellPricePcs: 0 };
+                const soldSoFar = State.sales.filter(s => s.brand === brand).reduce((sum, s) => sum + Number(s.pieces), 0);
+                const pendingOrders = State.orders.filter(o => o.brand === brand && o.status === 'Pending').reduce((sum, o) => sum + Number(o.pcs), 0);
+                const available = brandData.totalQty - soldSoFar - pendingOrders;
+                
+                if (available > 0 || brandData.totalQty > 0) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><div class="fw-bold small">${brand}</div></td>
+                        <td class="text-center number-font">${available}</td>
+                        <td class="text-end number-font">${formatCurrency(available * (brandData.sellPricePcs || 0))}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+        };
+
+        const renderUnpaidReport = () => {
+            const tbody = document.getElementById('unpaid-list-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            const unpaid = State.sales.filter(s => s.paymentStatus === 'Unpaid');
+            
+            if (unpaid.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">সব পেমেন্ট পরিশোধ হযেছে!</td></tr>';
+                return;
+            }
+
+            unpaid.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="small text-muted">${formatDate(s.date)}</div>
+                        <div class="fw-bold">${s.customerName || 'বেনামী'}</div>
+                    </td>
+                    <td><div class="small">${s.brand} (${s.pieces} পিস)</div></td>
+                    <td class="number-font fw-bold text-danger">${formatCurrency(s.totalAmount)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success" onclick="markAsPaid('${s.id}')">পরিশোধ</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.markAsPaid = async (id) => {
+            try {
+                updateSyncStatus('আপডেট হচ্ছে...');
+                await updateDoc(doc(db, 'sales', id), { paymentStatus: 'Paid' });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'সফল!',
+                    text: 'পেমেন্ট স্ট্যাটাস Paid করা হয়েছে।',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } catch (err) {
+                handleFirestoreError(err, 'UPDATE', 'sales/' + id);
+            }
+        };
+
         let profitChart = null;
         const updateProfitChart = (data) => {
             const ctx = document.getElementById('profitChart').getContext('2d');
@@ -1532,9 +1989,9 @@
         // --- EVENT HANDLERS ---
         
         // Stock Form
-        document.getElementById('stock-form').addEventListener('submit', (e) => {
+        document.getElementById('stock-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('stock-id').value;
+            const idValue = document.getElementById('stock-id').value;
             const brand = document.getElementById('stock-brand').value.trim();
             const packetPrice = parseFloat(document.getElementById('stock-packet-price').value);
             const pcsPerPacket = parseInt(document.getElementById('stock-pcs-per-packet').value);
@@ -1546,7 +2003,6 @@
             const totalPcs = packetQty * pcsPerPacket;
 
             const stockData = { 
-                id: id || generateId(), 
                 brand, 
                 packetPrice, 
                 pcsPerPacket, 
@@ -1557,29 +2013,30 @@
                 date 
             };
 
-            if (State.editingStockId) {
-                const index = State.stock.findIndex(s => s.id === State.editingStockId);
-                State.stock[index] = stockData;
-                State.editingStockId = null;
-                document.getElementById('stock-submit-btn').textContent = 'স্টক যোগ করুন';
-                document.getElementById('stock-cancel-btn').classList.add('d-none');
-            } else {
-                State.stock.push(stockData);
-            }
+            try {
+                updateSyncStatus('স্টক সেভ হচ্ছে...');
+                if (State.editingStockId) {
+                    await updateDoc(doc(db, 'stock', State.editingStockId), stockData);
+                    State.editingStockId = null;
+                    document.getElementById('stock-submit-btn').textContent = 'স্টক যোগ করুন';
+                    document.getElementById('stock-cancel-btn').classList.add('d-none');
+                } else {
+                    await addDoc(collection(db, 'stock'), stockData);
+                }
 
-            saveToStorage();
-            renderStockTable();
-            updateDashboard();
-            e.target.reset();
-            document.getElementById('stock-date').valueAsDate = new Date();
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'সফল!',
-                text: 'স্টক তথ্য সংরক্ষণ করা হয়েছে।',
-                timer: 1500,
-                showConfirmButton: false
-            });
+                e.target.reset();
+                document.getElementById('stock-date').valueAsDate = new Date();
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'সফল!',
+                    text: 'স্টক তথ্য সংরক্ষণ করা হয়েছে।',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } catch (err) {
+                handleFirestoreError(err, 'WRITE', 'stock');
+            }
         });
 
         window.editStock = (id) => {
@@ -1608,7 +2065,7 @@
             document.getElementById('stock-cancel-btn').classList.add('d-none');
         });
 
-        window.deleteStock = (id) => {
+        window.deleteStock = async (id) => {
             Swal.fire({
                 title: 'আপনি কি নিশ্চিত?',
                 text: "এই স্টক তথ্যটি ডিলিট হয়ে যাবে!",
@@ -1618,13 +2075,14 @@
                 cancelButtonColor: '#3085d6',
                 confirmButtonText: 'হ্যাঁ, ডিলিট করুন!',
                 cancelButtonText: 'বাতিল'
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    State.stock = State.stock.filter(s => s.id !== id);
-                    saveToStorage();
-                    renderStockTable();
-                    updateDashboard();
-                    Swal.fire('ডিলিট হয়েছে!', 'স্টক তথ্য মুছে ফেলা হয়েছে।', 'success');
+                    try {
+                        await deleteDoc(doc(db, 'stock', id));
+                        Swal.fire('ডিলিট হয়েছে!', 'স্টক তথ্য মুছে ফেলা হয়েছে।', 'success');
+                    } catch (err) {
+                        handleFirestoreError(err, 'DELETE', 'stock/' + id);
+                    }
                 }
             });
         };
@@ -1668,13 +2126,15 @@
             updateSellTotal();
         });
 
-        document.getElementById('sell-form').addEventListener('submit', (e) => {
+        document.getElementById('sell-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const date = document.getElementById('sell-date').value;
+            const customerName = document.getElementById('sell-customer').value.trim();
             const brand = document.getElementById('sell-brand').value;
             const pieces = parseInt(document.getElementById('sell-qty').value);
             const sellPrice = parseFloat(document.getElementById('sell-price').value);
             const totalAmount = parseFloat(document.getElementById('sell-total').value);
+            const paymentStatus = document.getElementById('sell-payment-status').value;
 
             // Check availability
             const summary = getBrandStockSummary();
@@ -1690,25 +2150,35 @@
                 return;
             }
 
-            State.sales.push({ id: generateId(), date, brand, pieces, sellPrice, totalAmount });
-            saveToStorage();
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'বিক্রি সফল!',
-                text: 'বিক্রির তথ্য রেকর্ড করা হয়েছে।',
-                timer: 1500,
-                showConfirmButton: false
-            });
+            try {
+                updateSyncStatus('বিক্রি সেভ হচ্ছে...');
+                await addDoc(collection(db, 'sales'), { 
+                    date, 
+                    brand, 
+                    pieces, 
+                    sellPrice, 
+                    totalAmount, 
+                    customerName, 
+                    paymentStatus 
+                });
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'বিক্রি সফল!',
+                    text: 'বিক্রির তথ্য রেকর্ড করা হয়েছে।',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
 
-            e.target.reset();
-            document.getElementById('sell-date').valueAsDate = new Date();
-            document.getElementById('stock-availability').classList.add('d-none');
-            renderSalesTable();
-            updateDashboard();
+                e.target.reset();
+                document.getElementById('sell-date').valueAsDate = new Date();
+                document.getElementById('stock-availability').classList.add('d-none');
+            } catch (err) {
+                handleFirestoreError(err, 'WRITE', 'sales');
+            }
         });
 
-        window.deleteSale = (id) => {
+        window.deleteSale = async (id) => {
             Swal.fire({
                 title: 'আপনি কি নিশ্চিত?',
                 text: "এই বিক্রির তথ্যটি ডিলিট হয়ে যাবে!",
@@ -1718,13 +2188,14 @@
                 cancelButtonColor: '#3085d6',
                 confirmButtonText: 'হ্যাঁ, ডিলিট করুন!',
                 cancelButtonText: 'বাতিল'
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    State.sales = State.sales.filter(s => s.id !== id);
-                    saveToStorage();
-                    renderSalesTable();
-                    updateDashboard();
-                    Swal.fire('ডিলিট হয়েছে!', 'বিক্রির তথ্য মুছে ফেলা হয়েছে।', 'success');
+                    try {
+                        await deleteDoc(doc(db, 'sales', id));
+                        Swal.fire('ডিলিট হয়েছে!', 'বিক্রির তথ্য মুছে ফেলা হয়েছে।', 'success');
+                    } catch (err) {
+                        handleFirestoreError(err, 'DELETE', 'sales/' + id);
+                    }
                 }
             });
         };
@@ -1861,7 +2332,7 @@
         };
 
         // --- INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const today = new Date().toISOString().split('T')[0];
             const stockDate = document.getElementById('stock-date');
             const sellDate = document.getElementById('sell-date');
@@ -1869,11 +2340,19 @@
             if (sellDate) sellDate.value = today;
 
             updateNav();
-            switchView(State.isAdmin ? 'dashboard' : 'home');
+            window.switchView(State.isAdmin ? 'dashboard' : 'home');
 
-            if (State.cloudUrl) {
-                fetchFromCloud();
-            }
+            // Initialize data listeners immediately (enabled by public rules)
+            initRealtimeData();
+
+            // Background auth initialization - won't block data loading
+            (async () => {
+                try {
+                    await signInAnonymously(auth);
+                } catch (err) {
+                    console.warn('Anonymous auth failed. Connectivity limited.');
+                }
+            })();
         });
     </script>
 </body>

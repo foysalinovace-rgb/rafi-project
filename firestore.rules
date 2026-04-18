@@ -1,0 +1,96 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: stock
+// Fields:
+//   - brand: string (required)
+//   - packetPrice: number
+//   - pcsPerPacket: number
+//   - packetQty: number
+//   - purchasePrice: number
+//   - quantity: number (required)
+//   - sellPricePcs: number
+//   - date: string (ISO date)
+//
+// Collection: sales
+// Fields:
+//   - date: string (ISO date)
+//   - brand: string (required)
+//   - pieces: number (required)
+//   - sellPrice: number
+//   - totalAmount: number (required)
+//
+// Collection: orders
+// Fields:
+//   - name: string (required)
+//   - floor: string
+//   - pcs: number (required)
+//   - brand: string (required)
+//   - price: number
+//   - total: number
+//   - status: string (Pending/Approved)
+//   - date: string (ISO datetime)
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      // Since Google Login is removed, we allow anyone authenticated (even anonymously) 
+      // to perform admin operations. The UI handles the ID/Password check.
+      return isAuthenticated();
+    }
+
+    // Validation Helpers
+    function isValidStock(data) {
+      return data.brand is string && data.brand.size() > 0 &&
+             data.quantity is number &&
+             data.date is string;
+    }
+
+    function isValidSale(data) {
+      return data.brand is string && data.brand.size() > 0 &&
+             data.pieces is number &&
+             data.totalAmount is number &&
+             data.date is string;
+    }
+
+    function isValidOrder(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.brand is string && data.brand.size() > 0 &&
+             data.pcs is number && data.pcs > 0 &&
+             data.status in ['Pending', 'Approved'] &&
+             data.date is string;
+    }
+
+    // Rules
+    
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    match /stock/{id} {
+      allow read, write: if true;
+    }
+
+    match /sales/{id} {
+      allow read, write: if true;
+    }
+
+    match /orders/{id} {
+      allow read, write: if true;
+    }
+
+    match /brands/{id} {
+      allow read, write: if true;
+    }
+  }
+}
