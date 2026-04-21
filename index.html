@@ -1066,6 +1066,7 @@
             window.renderAdminOrders();
             renderBrandsManager();
             updateBrandDropdowns();
+            renderUnpaidReport();
         };
 
         window.updateThreshold = () => {
@@ -1632,7 +1633,6 @@
                 div.innerHTML = `
                     <div class="recent-info">
                         <h6 class="mb-1">${order.brand} (${order.pcs} পিস)</h6>
-                        <div class="small text-dark fw-bold mb-1">অর্ডারকারী: ${order.name || 'অজানা'}</div>
                         <small class="text-muted">${formatDate(order.date)} • ৳${order.total}</small>
                     </div>
                     <div class="text-end">
@@ -1679,25 +1679,47 @@
 
         window.approveOrder = async (id) => {
             const order = State.orders.find(o => o.id === id);
-            if (order) {
-                try {
-                    updateSyncStatus('অ্যাপ্রুভ হচ্ছে...');
-                    // Update status to Approved
-                    await updateDoc(doc(db, 'orders', id), { status: 'Approved' });
-                    
-                    // Add to sales
-                    await addDoc(collection(db, 'sales'), {
-                        date: new Date().toISOString().split('T')[0],
-                        brand: order.brand,
-                        pieces: order.pcs,
-                        sellPrice: order.price,
-                        totalAmount: order.total
-                    });
-                    
-                    Swal.fire('সফল!', 'অর্ডারটি অ্যাপ্রুভ করা হয়েছে।', 'success');
-                } catch (err) {
-                    handleFirestoreError(err, 'UPDATE', 'orders/' + id);
-                }
+            if (!order) return;
+
+            const result = await Swal.fire({
+                title: 'পেমেন্ট টাইপ সিলেক্ট করুন',
+                text: `অর্ডারকারী: ${order.name}`,
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonColor: '#1e8e3e',
+                denyButtonColor: '#d93025',
+                cancelButtonColor: '#6e7881',
+                confirmButtonText: 'নগদ (Paid)',
+                denyButtonText: 'বাকী (Unpaid)',
+                cancelButtonText: 'বাতিল'
+            });
+
+            if (result.isDismissed && !result.isDenied) return;
+
+            const isPaid = result.isConfirmed;
+            const paymentStatus = isPaid ? 'Paid' : 'Unpaid';
+
+            try {
+                updateSyncStatus('অ্যাপ্রুভ হচ্ছে...');
+                // Update status to Approved
+                await updateDoc(doc(db, 'orders', id), { status: 'Approved' });
+                
+                // Add to sales
+                await addDoc(collection(db, 'sales'), {
+                    date: new Date().toISOString().split('T')[0],
+                    brand: order.brand,
+                    pieces: order.pcs,
+                    sellPrice: order.price,
+                    totalAmount: order.total,
+                    paymentStatus: paymentStatus,
+                    customerName: order.name,
+                    floor: order.floor
+                });
+                
+                Swal.fire('সফল!', `অর্ডারটি ${isPaid ? 'নগদ হিসেবে' : 'বাকী হিসেবে'} অ্যাপ্রুভ করা হয়েছে।`, 'success');
+            } catch (err) {
+                handleFirestoreError(err, 'UPDATE', 'orders/' + id);
             }
         };
 
