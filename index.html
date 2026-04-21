@@ -884,6 +884,21 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="card mt-3">
+                <div class="card-header fw-bold">নোটিফিকেশন সেটিংস</div>
+                <div class="card-body">
+                    <div id="notification-status-alert" class="alert alert-info py-2 small mb-3">
+                        নতুন অর্ডারের জন্য পুশ নোটিফিকেশন চেক করুন।
+                    </div>
+                    <button class="btn btn-primary btn-sm w-100" onclick="requestNotificationPermission()">
+                        নোটিফিকেশন চালু করুন
+                    </button>
+                    <div class="form-text small mt-2">
+                        যদি অটোমেটিক অনুমতি না চায়, তবে এই বাটনে ক্লিক করুন। ব্রাউজারের উপরে 'Allow' বাটনে ক্লিক করতে ভুলবেন না।
+                    </div>
+                </div>
+            </div>
             <div class="card mt-3">
                 <div class="card-body">
                     <button class="btn btn-outline-primary btn-sm w-100" onclick="forceReSync()">
@@ -1315,6 +1330,7 @@
                     const thresholdInput = document.getElementById('low-stock-threshold-input');
                     if (thresholdInput) thresholdInput.value = State.lowStockThreshold;
                     renderBrandsManager();
+                    updateNotificationUI();
                 }
             } catch (err) {}
         };
@@ -1358,18 +1374,57 @@
                 State.isAdmin = true;
                 saveToStorage();
                 
-                // Request Notification Permission
-                if ("Notification" in window) {
-                    Notification.requestPermission().then(permission => {
-                        console.log("Notification permission:", permission);
-                    });
-                }
-
                 window.switchView('dashboard');
                 updateNav();
-                Swal.fire('সফল!', 'এডমিন লগইন হয়েছে।', 'success');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'সফল!',
+                    text: 'এডমিন লগইন হয়েছে। রিয়েল-টাইম নোটিফিকেশন পেতে সেটিংস থেকে পারমিশন চেক করুন।',
+                    confirmButtonText: 'ঠিক আছে'
+                });
             } else {
                 Swal.fire('ভুল!', 'আইডি বা পাসওয়ার্ড সঠিক নয়।', 'error');
+            }
+        };
+
+        window.requestNotificationPermission = async () => {
+            if (!("Notification" in window)) {
+                Swal.fire('দুঃখিত!', 'আপনার ব্রাউজার নোটিফিকেশন সাপোর্ট করে না।', 'error');
+                return;
+            }
+
+            try {
+                const permission = await Notification.requestPermission();
+                updateNotificationUI(permission);
+                
+                if (permission === "granted") {
+                    const notification = new Notification("অভিনন্দন!", {
+                        body: "এখন থেকে আপনি নতুন অর্ডারের নোটিফিকেশন পাবেন।",
+                        icon: 'https://upload.wikimedia.org/wikipedia/commons/c/c0/Lucky-strike-login-page-logo-v2.png'
+                    });
+                    Swal.fire('সফল!', 'নোটিফিকেশন পারমিশন পাওয়া গেছে।', 'success');
+                } else if (permission === "denied") {
+                    Swal.fire('ব্যর্থ!', 'আপনি নোটিফিকেশন ব্লক করেছেন। ব্রাউজার সেটিংস থেকে এটি আনব্লক করুন।', 'warning');
+                }
+            } catch (err) {
+                console.error("Permission request error:", err);
+                Swal.fire('এরর!', 'নোটিফিকেশন পারমিশন চাওয়ার সময় সমস্যা হয়েছে।', 'error');
+            }
+        };
+
+        const updateNotificationUI = (permission = Notification.permission) => {
+            const statusEl = document.getElementById('notification-status-alert');
+            if (!statusEl) return;
+
+            if (permission === "granted") {
+                statusEl.className = "alert alert-success py-2 small mb-3";
+                statusEl.textContent = "✅ নোটিফিকেশন চালু আছে।";
+            } else if (permission === "denied") {
+                statusEl.className = "alert alert-danger py-2 small mb-3";
+                statusEl.textContent = "❌ নোটিফিকেশন ব্লক করা আছে।";
+            } else {
+                statusEl.className = "alert alert-warning py-2 small mb-3";
+                statusEl.textContent = "⚠️ নোটিফিকেশন অনুমতি এখনো দেওয়া হয়নি।";
             }
         };
 
